@@ -1,9 +1,14 @@
 package main
 
 import (
-	"github.com/zxers/zx-gin-vue/router"
+	"os"
+
+	"github.com/zxers/zx-gin-vue/cmd"
 )
 
 func main() {
-	router.Run()
+	if err := cmd.Execute(); err != nil {
+		println("start fail: ", err.Error())
+		os.Exit(-1)
+	}
 }

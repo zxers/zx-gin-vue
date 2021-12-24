@@ -1,12 +1,15 @@
 package controller
 
 import (
-	"math/rand"
 	"log"
+	"math/rand"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/zxers/zx-gin-vue/dao"
+	"github.com/zxers/zx-gin-vue/db"
+	"github.com/zxers/zx-gin-vue/model"
 )
 
 func Register(ctx *gin.Context) {
@@ -38,6 +41,21 @@ func Register(ctx *gin.Context) {
 	}
 
 	log.Println(name, password, phone)
+
+	if dao.IsPhoneExist(phone) {
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{
+			"code": 422,
+			"msg":	"User exist!",
+		})
+		return
+	}
+
+	user := model.User{
+		Name: 		name,
+		Password: 	password,
+		Phone: 		phone,
+	}
+	db.DB.Create(&user)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"msg": "Register success",		

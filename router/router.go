@@ -5,10 +5,16 @@ import (
 	"github.com/zxers/zx-gin-vue/controller"
 )
 
-func Run() {
+func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
-	r.POST("/api/user/register", controller.Register)
+	//r.Static("/static", "static")
+	//r.LoadHTMLGlob("template/*")
+
+	api := r.Group("v1")
+	{
+		api.POST("/user/register", controller.Register)
+	}
 	
-	r.Run()
+	return r
 }
