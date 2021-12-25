@@ -5,9 +5,11 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/zxers/zx-gin-vue/response"
 	"github.com/zxers/zx-gin-vue/common"
 	"github.com/zxers/zx-gin-vue/dao"
 	"github.com/zxers/zx-gin-vue/db"
+	"github.com/zxers/zx-gin-vue/dto"
 	"github.com/zxers/zx-gin-vue/model"
 	"github.com/zxers/zx-gin-vue/util"
 	"golang.org/x/crypto/bcrypt"
@@ -22,18 +24,14 @@ func Register(ctx *gin.Context) {
 
 	//Data verification
 	if len(phone) != 11 {
-		ctx.JSON(http.StatusUnprocessableEntity,gin.H{
-			"code":	422,
-			"msg":	"The phone num must be 11 digits!",
-		})
+		response.Response(ctx,http.StatusUnprocessableEntity,422,nil,"The phone num must be 11 digits!")
+		return
 	}
 
 	//verification password
 	if len(password) < 6 {
-		ctx.JSON(http.StatusOK,gin.H{
-			"code":	422,
-			"msg":	"Password cannot be less than 6 digits!",
-		})
+		response.Response(ctx,http.StatusUnprocessableEntity,422,nil,"Password cannot be less than 6 digits!")
+		return
 	}
 
 	//if not input the name, to a 10 digits random string
@@ -44,18 +42,13 @@ func Register(ctx *gin.Context) {
 	log.Println(name, password, phone)
 
 	if dao.IsPhoneExist(phone) {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{
-			"code": 422,
-			"msg":	"User exist!",
-		})
+		response.Response(ctx,http.StatusUnprocessableEntity,422,nil,"User exist!")
 		return
 	}
 	hashedPassword, err:= bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"code": 500,
-			"msg": "加密错误",
-		})
+		response.Response(ctx,http.StatusInternalServerError,500,nil,"Hashed password error!")
+		return
 	}
 	user := model.User{
 		Name: 		name,
@@ -63,11 +56,8 @@ func Register(ctx *gin.Context) {
 		Phone: 		phone,
 	}
 	db.DB.Create(&user)
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"code": 200,
-		"msg": "Register success",		
-	})
+	response.Success(ctx,nil,"Register success")
+	
 }
 
 func Login(ctx *gin.Context) {
@@ -133,11 +123,8 @@ func Login(ctx *gin.Context) {
 		return
 	}  
 	//返回结果
-	ctx.JSON(http.StatusOK, gin.H{
-		"code": 200,
-		"data": gin.H{"token": token},
-		"msg": "Login success",
-	})
+	response.Success(ctx,gin.H{"token": token},"Login success")
+	
 }
 
 func Info(ctx *gin.Context) {
@@ -145,7 +132,7 @@ func Info(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": 200,
 		"data": gin.H{
-			"user": user,
+			"user": dto.ToUserDto(user.(model.User)),
 		},
 	})
 }
